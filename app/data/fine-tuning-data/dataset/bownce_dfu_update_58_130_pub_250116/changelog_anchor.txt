@@ -1,0 +1,99 @@
+//header_begin
+18      08.04.2021    FW für Erstinbetriebnahme
+                      - Datenübertragung via BLE mit dummy daten
+                      - Stromaufnahme ungeflashtes PCB ca 5mA
+                      - Off- Mode nach 4 Minuten ohne Bewegung  I = 27 uA
+                      - On Mode I = 6 mA (mit RTT!))
+                      - Selbsttest BMI160 und ADC. Daten werden auf Plausibilität getestet, Fals test failed --> rotes Dauerblinken
+                      - LED 2 x grün nach Start
+                        1/Sekunde grün wenn Selbsttest OK, 1/Sekund blau bei BLE Verbindung
+19      21.04.2021    - ADC Ecitation implementiert
+                      - Info Frame mit Versionsnummer
+20      23.04.2021    - Batteriespannungsmessung implementiert
+                      - Ruichtigen Bootloader (Anker) gemerged. Bootloader vom Ball enthält anderen Key!                   
+                       (Bitte keinesfalls V19 flashen...V19 enthält Bootloader vom Ball...)
+21      27.04.2021    - BugFix ADC Messung
+                      - Offset Kalibrierung nach Batteriewechsel, Brown-Out detection
+22      04.05.2021    - BugFix Timingproblem SD <--> ADC Init
+                      - Brownout Detection entfernt, da nicht zuverlässig. Stattdessen Bit setzen in nonvolatile RAM (SD) wenn 
+                        Anker kalibriert
+23					  - Code cleanup, alten Code entfernt
+					  - Debug Frame für BLE UART Debugdaten Übertragung
+					  - DIS Device Information Service implementiert
+					  - NUS UUID aus Advertising entfernt, damit mehr Platz frei ist fuer den DeviceNamen
+24		10.05.2021	  - Linearisierung Messung mit interpolation nach Tabelle von Gaby
+					  - GAP Read/Write Handler implementiert
+                      - GAP DeviceName write implementiert mit Ändern des des DeviceNamen im Advertising 
+                      - DeviceName in Flash nvData speichern                  
+                        Bekannte Fehler: DeviceName in Flash nicht korrekt (nach Ändern des DeviceNamen per GAP write wird nach Reset und
+                        erneutem ADvertisen der Name in der DeviceListe (Android) falsch angezeigt...)  	
+25		23.05.2021	  - BugFix Flash Write
+					  - #define MAX_CONN_PARAMS_UPDATE_COUNT    9   
+26		25.05.2021	  - #define MAX_CONN_PARAMS_UPDATE_COUNT    3  als Gegenprobe zum Test 
+27		25.05.2021	  - Bei GATT Timeout Verbindungsflab nicht mehr auf false setzen. BugFix sendet nicht bei Verbindung via BLE UART
+28		25.05.2021	  - Handling der Verbindungsflags in den NUS Data-Handler verschoben. Notwendig, da bei iOS der Verbindungsaufbau
+						in anderer Reihenfolge erfolgt wie bei Android
+29		25.05.2021	  - Comm Parameter angepasst an iOS Styleguid. Behebt das iOS Verbindungsprobme (Abbruch nach xxx Minuten)
+30		26.05.2021	  - Code clean up
+31		02.06.2021	  - Linearisierung Wägezelle weider entfernt
+32		07.06.2021	  - Linearisation of load cell reenabled after test with now anchor mechanics
+					  - Default device name set to BAxxxxxx (xxxxxx last 6 digits of uC serial number)
+					  - UART UUID re-implemented in advertising package, DIS and DFU UUID removed from complete list
+					  - complete 64Bit uC ID in serial number string of DIS
+33		16.06.2021	  - BugFix: Goto Off-Mode after 3 Minutes
+					  - Goto Off-Mode even when connection via BLE is established
+					  - Keep bonding information when returning from Off-Mode
+					  - BugFix: DIS FW-Revision String too short
+34		06.07.2021	  - Transmit neg. values for rope tension
+35		18.07.2021	  - Disable PON Calibration
+------------------------- C1 Sample ------------------------------------------------------------------------------
+38		06.10.2021	  - Port configuration addapted to C1 Sample HW 
+40		20.10.2021	  - Fixed Bootloader Configuration
+					  - removed Testpin Toggle from Bootloader
+					  - Bootloader Advert. Name Changed to BownceABoot (Ball will be BownceBBoot, usually not visible to
+						end user
+					  -	Fixed Bootloader Build configuration. sdk_config.h from sdk template was used instead of projekt sdk_congig.h
+					  -	Bootloader Project tree moved to main project tree to keep dependencies clean and to avoid
+						misplacement with ball bootloader
+						--> Bootloader for A-Sample "Bootloader_A"
+						--> Bootloader for C1-Sample "Bootloader_C1"
+						--> When checking out the A-Sample branch. The package build script will be outomatically point to
+						    Bootloader_A
+					  - Bootloader Code clean-up
+42		18.01.2022    - no led flash after sending additional data package via nus (see above). LED should only
+						flash 1/Second
+						Power Consumpion meassured with this Version: On-Mode (calibration) : 8,6mA
+																	  On-Mode 7,8mA
+43		18.02.2022	  - linearisation of ropetension addapted to C1 mechaniks	
+------------------------- C5 Sample ------------------------------------------------------------------------------
+50		04.10.2022	  - Vorabversion Simon
+51		04.10.2022	  - C5 Muster
+				      - BMI270 ersetzt den BMI160
+				      - BugFix HW-Revision string war hard coded auf A-Muster. Falsch!
+				      - EOL Testmode implementiert
+				      - Off-Mode und Statemachine angepasst an Ball, damit passend zum EOL Kommando "gehe in Off-Mode"
+52		05.10.2022	  - BugFix Off-Mode 
+					  - BugFix Sende request nach Aenderung der Seilspannung wird nicht geloescht
+53		17.10.2022	  - Linearisierung ADC-Waegezelle getuned
+					  - Samplingfrequenz erhoeht, dafür PT1 Filter eingebaut
+54		18.10.2011	  - Calib Dauer angepasst an höhere Samplingfrequenz
+55		16.10.2022	  - DIS Informationen angepasst
+56      03.05.2023    - EOL Test mit schnellem Advertising + EOL Uart Kommandos zum Abschalten/Einschalten von Advertising
+					  - EOL Uart Tx Funktion per Semaphore blocking gemacht, damit ACK bei Goto-Sleep Kommando noch geschickt werden
+					    kann bevor das Device in den Off-Mode geht
+57		08.01.2025	  - Power-Off-delay programmierbar via BLE UART Kommando, POD in nvData gespeichert
+					  - BLE Kommando zum schreiben und lesen von POD implementiert
+58		10.01.2025	  - Added Chip ID to the debug frame which was allready used for the Power-Off-Delay
+
+Checkliste Release :
+1. Version in config.h richtig gesetzt ?
+2. Datum in History eingetragen ?
+3. BMI und Shutdown enabled ?
+4. Off Delay auf 4 Minuten gesetzt ?
+5. Buildconfig auf "Release" ?
+6. Version in Buildscript richtig eingetragen ?
+7. Commiten, Tag mit Versionsnummer erzeugen, Pushen, Zip-File in Versionsverzeichnis ablegen ...
+8. Versionsnummer in Batch zum flashen eintragen
+*/
+
+//header_end

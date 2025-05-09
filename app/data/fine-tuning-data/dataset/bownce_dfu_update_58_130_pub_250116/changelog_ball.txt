@@ -1,0 +1,107 @@
+//header_begin
+/*
+Version Datum 
+29      31.03.2021    FW für Erstinbetriebnahme
+                      - Datenübertragung via BLE mit hochlaufenden Zählern
+                      - Stromaufnahme ungeflashtes PCB ca 5mA
+                      - Off- Mode nach 4 Minuten ohne Bewegung  I = 27 uA
+                      - On Mode I = 6 mA (mit RTT!))
+                      - Selbsttest BMI160 und ADXL. Daten werden auf Plausibilität getestet, Fals test failed --> rotes Dauerblinken
+                      - LED 2 x grün nach Start
+                        1/Sekunde grün wenn Selbsttest OK, 1/Sekund blau bei BLE Verbindung
+32      21.04.2021    - Info Frame mit Versionsnummer
+                      - Filterkonstanten an neue HW angepasst
+40      23.05.2021    - Commparameter geändert weg. iOS Verbindungsabbruch --> hat nicht funktioniert
+43      26.05.2021    - Commparameter geändert weg. iOS Verbindungsabbruch
+44      27.05.2021    - BugFix GAP Write DeviceName wird nicht direkt ins Advertising übernommen, sondern erst nach restart
+                      - DeviceName "BownceBall00xxxxxx" --> zwei 0 aufgefuellt wegen konsistentz mit Anker
+45		07.06.2021	  - Rename branch to A-Sample
+					  - Default device name set to BAxxxxxx (xxxxxx last 6 digits of uC serial number)
+					  - UART UUID re-implemented in advertising package, DIS and DFU UUID removed from complete list
+					  - complete 64Bit uC ID in serial number string of DIS
+					  - BugFix power consumtion to high; proper deinitialisation of GPIO
+46		10.06.2021	  - Dataframe heart beat set to 2 seconds
+					  - Dataframe event triggered after hit was detected
+					  - Off-Mode delay set to 3 minutes according 3.125.000.000
+					  - Fixed Firmware Version String in DIS (string was shortened to 1 char: "1" instead of "1.3")
+					  - Delete information of bonded devices only after battery reconnect. Otherwise keep the bonding
+						information
+					  - Goto Off-Mode even if device is connected via BLE
+48		16.06.2021	  - Baseline
+51		25.06.2021	  - Bootloader can downgrade FW to Version 48 (Version information provided in DFU package is keept to 
+						48) This makes it possible to downgrade the FW again
+					  - Cheating protection disabled
+52		23.07.2021	  - integration of period meassurement
+53		28.07.2021	  - force meassurement implemented
+					  - consecutive hit counting implemented
+					  - uart protokoll as of specification 1.2 but disabled for this baseline
+54		05.08.2021	  - elongation in data frame (not checked in to git!)
+55		09.08.2021	  - accX_keep and accY_keep in data frame
+					  - debug frame header changed to '*'
+					  --> following has no effect to the app or use case, only naming in code has changed!
+					  - 'data' frame name changed to 'debug data' --> this is the frame where the debug data are included
+					  - 'config' frame name changed to 'data' --> this is the frame where the hitcounter is included
+56		09.08.2021	  - Trigger mechanism for debug data implemented
+58					  - VERSION FOR TESTBENCH ONLY !!!
+59		16.08.2021    - Force calculation improved 
+		06.09.2021	  - DMA Buffer-Swap fixed
+					  - BugFix in Integration
+					  - Samplingfrequenz BMI auf 1000Hz erhoeht
+					  - BMI160 lesen in SAAD Service Routine
+					  - BMI Init Sequenz geändert. BMI muss vor dem SAADC initialisiert sein
+					  - XP206/XP209 für Laufzeitmessungen instrumentiert
+73    14.09.2021	  - Workaround for DMA Bug implemented
+					  - BugFix in X-Y magnitude calculation
+					  - Batterievoltage meassurement implemented
+					  - Instrumentation for timeing/runtime meassurement implemented (disabled via compiler switch)
+                      - Timeing behavior of BMI160 reading improved. BMI reading moved from BG Task to RT task
+                      - X-Y Magnitude calculation improved (highest/lowest magnitude is not exactly at the zero passing, but one sample bevfre)                    
+ 74	  15.09.2021	  - Force Divider from 18 --> 12   
+ 75	  15.09.2021      - Force calculation changed to force = acc_xy_abs_keep / m + b
+					  - m and b can be written to flash via 0x36 debug
+ 76   16.09.2021	  - limit for force calculation can be written via 0x36 debug
+ 78   22.09.2021  - Accuracy calculation implemented
+                  - generate random UUID at startup (for offline bowncing mode)
+                  - Store last error in flash nv_data
+                  - added uart debug command to make parameters for accuracy calculation changeable  
+                    0x37,m,b,limit   b is signed
+                  - parameters for accuracy calculation in nv_data
+                  - ble uart protocoll data frame according to spec. 1.2 (accuracy and bitfield added)
+  84  08.11.2021  - accuracy calculation changed 
+  87  17.11.2021  - Consecutive hits counter implemented
+                  - swingtime meassuremment output to dataframe. 
+                  - Dataframe changed (see spec. V1.3)
+  88  03.12.1021  - Offline bowncing mode implemented
+  90  10.01.2022  - KNOWN BUG (KB_01): SD responds with "Flash Full" after writing offline bowncing data for the
+                    first time
+                    Workarround: disable error checking after sd initialization
+  xx  11.01.2022  - Bootloader DeviceName fixed
+                  - LED sigbnalize battery voltage
+  99/100  31.08.2022  - BMI160 ersetzt durch BMI270
+				  - ADXL377 ersetzt durch ADXL372
+				  - TWI Interface und Treiber entfernt
+				  - SPI Instanzen 0 und 1 fuer BMI und ADXL
+				  - UART Instantz 0 für EOL Test Interface implementiert
+				  - Interruptprioritäten angepasst
+				  - Timer für BMI entfernt. BMI lauft jetzt mit im ADXL ready interrupt
+				  - Power-Down sequenz angepasst (neue sensoren!) deinit
+				  - Schnitstellen fuer Sensoren Selbsttest implementiert
+				  --> ___Achtung, Treiber fuer ADXL und BMI sind angepasst/gepatched!___
+				  Bootloader: Verbindungsparameter an iOS Styleguide angepasst (waren im C1 Bootloader noch nicht angepasst)
+				  --> Version 3.17 (16 --> 17 wegen erweiterter Test Funktionalitaet)
+ 101  15.09.2022  - Cheating timeout 100-->180 
+ 103  05.10.2022  - DIS angepasst
+				  - Config.h angepasst
+104   07.10.2022  - Versionsnummer 4.xx gefixt
+105	  26.10.2022  - DIS poppulated
+119   03.05.2023  - EOL Test mit schnellem Advertising + EOL Uart Kommandos zum Abschalten/Einschalten von Advertising
+120               - EOL Uart blocking, damit ACK bei Off-Mode noch gesendet werden kann
+130	  07.01.2025  - Power Off Threshold in nvData
+				  - BLE Uart Kommando zum überschreiben von Power Off Threshold in nvData
+131   10.01.2025  - Added Chip ID to the debug data frame allready used for the Power-Off-Threshold 
+  
+*/
+/// </summary>
+// --------------------------------------------------------------------------------
+
+//header_end

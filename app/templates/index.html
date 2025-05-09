@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Chatbot GUI</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+    <body>
+        <h1>This is an AI Chatbot, ask him anything.</h1>
+        <div id="chat-container">
+            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+            <div id="messages"></div>
+            <textarea autocomplete="off" id="userInput" placeholder="Type your message..."></textarea>
+            <button onclick="sendMessage()" id="sendButton">Send</button>
+        </div>
+
+        <script src="{{ url_for('static', filename='script.js') }}"></script>
+    </body>
+</html>

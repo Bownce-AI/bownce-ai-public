@@ -1,0 +1,6 @@
+Detaillierte Informationen über das Produkt Bownce
+Technische Zusammensetzung (Hardware, Software und Firmware
+(aufpassen auf sensible Daten!))
+
+// TODO: KI hat frühere Konversation nicht als Kontext
+aktiviert => (Langzeit-)Gedächtnis aktivieren
