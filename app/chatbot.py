@@ -28,6 +28,7 @@ def chat():
         response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
+                store=True,
                 stream=True
         )
 
