@@ -26,7 +26,7 @@ def chat():
 
         # Send message to OpenAI API
         response = client.chat.completions.create(
-                model="gpt-4o",
+                model="ft:gpt-4.1-2025-04-14:personal:bownce-fine-tuned-v1-0:BjSzHqZU",
                 messages=messages,
                 store=True,
                 stream=True

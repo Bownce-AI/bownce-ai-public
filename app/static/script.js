@@ -48,7 +48,12 @@ async function sendMessage() {
             const chunk = decoder.decode(value, { stream: true });
             accumulatedChunks += chunk;
 
-            aiMessage.innerHTML = `<p><strong>AI:</strong></p>` + marked.parse(accumulatedChunks); // Append formatted chunk to the message
+            let formattedResponse = marked.parse(accumulatedChunks);
+
+            formattedResponse = formattedResponse.replace(/(Fazit[\s\S]*)$/, '<div class="conclusion">$1</div>');
+            formattedResponse = formattedResponse.replace(/(Kurz gesagt[\s\S]*)$/, '<div class="conclusion">$1</div>');
+
+            aiMessage.innerHTML = `<p><strong>AI:</strong></p>` + formattedResponse; // Append formatted chunk to the message
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
         }
     }
